@@ -1,0 +1,143 @@
+blueprint:
+  name: IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
+  author: Willy
+  description: >
+    Unified controller blueprint for IKEA BILRESA E2490 Matter scroll wheel.
+    Supports macro 1/2/3, single & double click, long press/release,
+    and wheel rotation with step count.
+    Emits "uhb_controller_event" for use with my hooks.
+    ℹ️ Version 2026.02.24
+  domain: automation
+  homeassistant:
+    min_version: 2025.12.0
+
+input:
+  controller_id:
+    name: Controller ID
+    description: Unique ID used in uhb_controller_event (e.g. bilresa_e2490_living)
+    default: bilresa_e2490
+    selector:
+      text:
+
+  macro:
+    name: Active Macro
+    description: Select which macro (1 / 2 / 3) this automation represents.
+    default: "1"
+    selector:
+      select:
+        options:
+          - "1"
+          - "2"
+          - "3"
+
+  press_event:
+    name: Pressed – Event entity (selected macro)
+    selector:
+      entity:
+        domain: event
+
+  rotate_forward_event:
+    name: Scroll forward – Event entity (selected macro)
+    selector:
+      entity:
+        domain: event
+
+  rotate_backward_event:
+    name: Scroll back – Event entity (selected macro)
+    selector:
+      entity:
+        domain: event
+
+variables:
+  controller: !input controller_id
+  macro: !input macro
+  press_entity: !input press_event
+  fwd_entity: !input rotate_forward_event
+  back_entity: !input rotate_backward_event
+
+trigger:
+  - platform: state
+    entity_id:
+      - !input press_event
+      - !input rotate_forward_event
+      - !input rotate_backward_event
+
+condition: []
+
+action:
+  - variables:
+      entity: "{{ trigger.entity_id }}"
+      event_type: "{{ trigger.to_state.attributes.event_type }}"
+      steps: "{{ trigger.to_state.attributes.totalNumberOfPressesCounted | int(1) }}"
+
+  - choose:
+
+      # -------------------------------------------------
+      # CLICK / PRESS
+      # -------------------------------------------------
+
+      - conditions: >
+          {{ entity == press_entity and event_type == 'multi_press_1' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              macro: "{{ macro }}"
+              action: button_single
+
+      - conditions: >
+          {{ entity == press_entity and event_type == 'multi_press_2' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              macro: "{{ macro }}"
+              action: button_double
+
+      - conditions: >
+          {{ entity == press_entity and event_type == 'long_press' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              macro: "{{ macro }}"
+              action: button_long
+
+      - conditions: >
+          {{ entity == press_entity and event_type == 'long_release' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              macro: "{{ macro }}"
+              action: button_release
+
+      # -------------------------------------------------
+      # ROTATE FORWARD
+      # -------------------------------------------------
+
+      - conditions: "{{ entity == fwd_entity }}"
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              macro: "{{ macro }}"
+              action: rotate_up
+              args:
+                steps: "{{ steps }}"
+
+      # -------------------------------------------------
+      # ROTATE BACKWARD
+      # -------------------------------------------------
+
+      - conditions: "{{ entity == back_entity }}"
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              macro: "{{ macro }}"
+              action: rotate_down
+              args:
+                steps: "{{ steps }}"
+
+mode: restart
