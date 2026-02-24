@@ -32,12 +32,14 @@ blueprint:
       selector:
         entity:
           domain: event
+          device: !input controller_device
 
     button_2_event:
       name: Small Button - Event Entity
       selector:
         entity:
           domain: event
+          device: !input controller_device
 
     # ---------------------------------------------------------------
     # BUTTON 1 ACTIONS
