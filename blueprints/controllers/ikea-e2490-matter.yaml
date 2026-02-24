@@ -1,6 +1,6 @@
 blueprint:
   name: IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
-  author: Willy
+  author: napalmz
   description: >
     Unified controller blueprint for IKEA BILRESA E2490 Matter scroll wheel.
     Supports macro 1/2/3, single & double click, long press/release,
@@ -31,19 +31,19 @@ input:
           - "3"
 
   press_event:
-    name: Pressed – Event entity (selected macro)
+    name: Pressed - Event entity (selected macro)
     selector:
       entity:
         domain: event
 
   rotate_forward_event:
-    name: Scroll forward – Event entity (selected macro)
+    name: Scroll forward - Event entity (selected macro)
     selector:
       entity:
         domain: event
 
   rotate_backward_event:
-    name: Scroll back – Event entity (selected macro)
+    name: Scroll back - Event entity (selected macro)
     selector:
       entity:
         domain: event

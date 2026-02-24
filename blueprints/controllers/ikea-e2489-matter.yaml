@@ -1,0 +1,120 @@
+blueprint:
+  name: IKEA BILRESA E2489 Dual Button (Matter · Unified)
+  author: napalmz
+  description: >
+    Unified controller blueprint for IKEA BILRESA E2489 Matter dual button.
+    Supports single & double click, long press/release.
+    Emits "uhb_controller_event" for use with my hooks.
+    ℹ️ Version 2026.02.24
+  domain: automation
+  homeassistant:
+    min_version: 2025.12.0
+
+input:
+  controller_id:
+    name: Controller ID
+    description: Unique ID used in uhb_controller_event (e.g., bilresa_e2489_living)
+    default: bilresa_e2489
+    selector:
+      text:
+
+  button_1_event:
+    name: Large Button - Event Entity
+    selector:
+      entity:
+        domain: event
+
+  button_2_event:
+    name: Small Button - Event Entity
+    selector:
+      entity:
+        domain: event
+
+variables:
+  controller: !input controller_id
+  btn1_entity: !input button_1_event
+  btn2_entity: !input button_2_event
+
+trigger:
+  - platform: state
+    entity_id:
+      - !input button_1_event
+      - !input button_2_event
+
+condition: []
+
+action:
+  - variables:
+      entity: "{{ trigger.entity_id }}"
+      event_type: "{{ trigger.to_state.attributes.event_type }}"
+      steps: "{{ trigger.to_state.attributes.totalNumberOfPressesCounted | int(1) }}"
+
+  - choose:
+      # --- LARGE BUTTON ---
+      - conditions: >
+          {{ entity == btn1_entity and event_type == 'multi_press_1' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 1
+              action: button_single
+      - conditions: >
+          {{ entity == btn1_entity and event_type == 'multi_press_2' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 1
+              action: button_double
+      - conditions: >
+          {{ entity == btn1_entity and event_type == 'long_press' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 1
+              action: button_long
+      - conditions: >
+          {{ entity == btn1_entity and event_type == 'long_release' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 1
+              action: button_release
+      # --- SMALL BUTTON ---
+      - conditions: >
+          {{ entity == btn2_entity and event_type == 'multi_press_1' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 2
+              action: button_single
+      - conditions: >
+          {{ entity == btn2_entity and event_type == 'multi_press_2' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 2
+              action: button_double
+      - conditions: >
+          {{ entity == btn2_entity and event_type == 'long_press' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 2
+              action: button_long
+      - conditions: >
+          {{ entity == btn2_entity and event_type == 'long_release' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 2
+              action: button_release
+
+mode: restart
