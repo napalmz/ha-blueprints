@@ -23,6 +23,7 @@ blueprint:
           filter:
             - integration: matter
               manufacturer: IKEA of Sweden
+              model: BILRESA dual button
           multiple: false
 
     controller_id:

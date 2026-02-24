@@ -24,6 +24,7 @@ blueprint:
           filter:
             - integration: matter
               manufacturer: IKEA of Sweden
+              model: BILRESA scroll wheel
           multiple: false
 
     controller_id:
