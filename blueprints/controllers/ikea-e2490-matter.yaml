@@ -89,6 +89,12 @@ blueprint:
       default: []
       selector:
         action: {}
+    action_button_triple:
+      name: Button Triple Press
+      description: Action for triple press (multi_press_3)
+      default: []
+      selector:
+        action: {}
     action_button_long:
       name: Button Long Press
       description: Action for long press (long_press)
@@ -141,8 +147,6 @@ action:
       # -------------------------------------------------
       # CLICK / PRESS
       # -------------------------------------------------
-
-
       - conditions: >
           {{ entity == press_entity and event_type == 'multi_press_1' }}
         sequence:
@@ -166,6 +170,18 @@ action:
           - choose:
               - conditions: []
                 sequence: !input action_button_double
+
+      - conditions: >
+          {{ entity == press_entity and event_type == 'multi_press_3' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              macro: "{{ macro }}"
+              action: button_triple
+          - choose:
+              - conditions: []
+                sequence: !input action_button_triple
 
       - conditions: >
           {{ entity == press_entity and event_type == 'long_press' }}

@@ -71,7 +71,13 @@ blueprint:
       selector:
         action: {}
 
-    button_1_long:
+    button_1_long_press:
+      name: Large Button - Long Press (while held)
+      description: Action for Large Button long_press (mentre premuto).
+      default: []
+      selector:
+        action: {}
+    button_1_long_release:
       name: Large Button - Long Press (on release)
       description: Action for Large Button long press completion (long_release).
       default: []
@@ -96,7 +102,13 @@ blueprint:
       selector:
         action: {}
 
-    button_2_long:
+    button_2_long_press:
+      name: Small Button - Long Press (while held)
+      description: Action for Small Button long_press (mentre premuto).
+      default: []
+      selector:
+        action: {}
+    button_2_long_release:
       name: Small Button - Long Press (on release)
       description: Action for Small Button long press completion (long_release).
       default: []
@@ -154,16 +166,29 @@ action:
       - conditions:
           - condition: template
             value_template: >
+              {{ trigger_id == 'button1' and press_type == 'long_press' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 1
+              action: button_long_press
+          - choose:
+              - conditions: []
+                sequence: !input button_1_long_press
+      - conditions:
+          - condition: template
+            value_template: >
               {{ trigger_id == 'button1' and press_type == 'long_release' }}
         sequence:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
               button: 1
-              action: button_long
+              action: button_long_release
           - choose:
               - conditions: []
-                sequence: !input button_1_long
+                sequence: !input button_1_long_release
       # --- BUTTON 2 ---
       - conditions:
           - condition: template
@@ -194,15 +219,28 @@ action:
       - conditions:
           - condition: template
             value_template: >
+              {{ trigger_id == 'button2' and press_type == 'long_press' }}
+        sequence:
+          - event: uhb_controller_event
+            event_data:
+              controller: "{{ controller }}"
+              button: 2
+              action: button_long_press
+          - choose:
+              - conditions: []
+                sequence: !input button_2_long_press
+      - conditions:
+          - condition: template
+            value_template: >
               {{ trigger_id == 'button2' and press_type == 'long_release' }}
         sequence:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
               button: 2
-              action: button_long
+              action: button_long_release
           - choose:
               - conditions: []
-                sequence: !input button_2_long
+                sequence: !input button_2_long_release
 
 mode: restart
