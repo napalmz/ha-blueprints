@@ -1,10 +1,13 @@
 blueprint:
   name: IKEA BILRESA E2489 Dual Button (Matter · Unified)
   author: napalmz
-  description: >
+  description: |
+    # Controller - IKEA BILRESA E2489 Dual Button (Matter · Unified)
+
     Unified controller blueprint for IKEA BILRESA E2489 Matter dual button.
     Supports single & double click, long press/release.
     Emits "uhb_controller_event" for use with my hooks.
+
     ℹ️ Version 2026.02.24
   domain: automation
   homeassistant:
@@ -18,47 +21,57 @@ blueprint:
       selector:
         device:
           filter:
-            - manufacturer: IKEA of Sweden
+            - integration: matter
+              manufacturer: IKEA of Sweden
+          multiple: false
 
     controller_id:
       name: Controller ID
       description: Unique ID used in uhb_controller_event (e.g., bilresa_e2489_living)
       default: bilresa_e2489
       selector:
-        text: {}
+        text:
+          multiline: false
+          multiple: false
 
     button_1_event:
       name: Large Button - Event Entity
       selector:
         entity:
+          integration: matter
           domain: event
+          multiple: false
+          reorder: false
 
     button_2_event:
       name: Small Button - Event Entity
       selector:
         entity:
+          integration: matter
           domain: event
+          multiple: false
+          reorder: false
 
     # ---------------------------------------------------------------
     # BUTTON 1 ACTIONS
     # ---------------------------------------------------------------
 
     button_1_single:
-      name: Large Button – Single Press
+      name: Large Button - Single Press
       description: Action for Large Button single press (multi_press_1).
       default: []
       selector:
         action: {}
 
     button_1_double:
-      name: Large Button – Double Press
+      name: Large Button - Double Press
       description: Action for Large Button double press (multi_press_2).
       default: []
       selector:
         action: {}
 
     button_1_long:
-      name: Large Button – Long Press (on release)
+      name: Large Button - Long Press (on release)
       description: Action for Large Button long press completion (long_release).
       default: []
       selector:
@@ -69,21 +82,21 @@ blueprint:
     # ---------------------------------------------------------------
 
     button_2_single:
-      name: Small Button – Single Press
+      name: Small Button - Single Press
       description: Action for Small Button single press (multi_press_1).
       default: []
       selector:
         action: {}
 
     button_2_double:
-      name: Small Button – Double Press
+      name: Small Button - Double Press
       description: Action for Small Button double press (multi_press_2).
       default: []
       selector:
         action: {}
 
     button_2_long:
-      name: Small Button – Long Press (on release)
+      name: Small Button - Long Press (on release)
       description: Action for Small Button long press completion (long_release).
       default: []
       selector:
