@@ -16,7 +16,7 @@ input:
     description: Unique ID used in uhb_controller_event (e.g., bilresa_e2489_living)
     default: bilresa_e2489
     selector:
-      text:
+      text: {}
 
   button_1_event:
     name: Large Button - Event Entity
