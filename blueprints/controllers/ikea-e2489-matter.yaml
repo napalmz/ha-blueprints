@@ -11,6 +11,15 @@ blueprint:
     min_version: 2025.12.0
 
   input:
+    controller_device:
+      name: BILRESA Button Device
+      description: >
+        Select the IKEA BILRESA E2489 device. This is informational only.
+      selector:
+        device:
+          filter:
+            - manufacturer: IKEA of Sweden
+
     controller_id:
       name: Controller ID
       description: Unique ID used in uhb_controller_event (e.g., bilresa_e2489_living)
@@ -30,6 +39,56 @@ blueprint:
         entity:
           domain: event
 
+    # ---------------------------------------------------------------
+    # BUTTON 1 ACTIONS
+    # ---------------------------------------------------------------
+
+    button_1_single:
+      name: Large Button – Single Press
+      description: Action for Large Button single press (multi_press_1).
+      default: []
+      selector:
+        action: {}
+
+    button_1_double:
+      name: Large Button – Double Press
+      description: Action for Large Button double press (multi_press_2).
+      default: []
+      selector:
+        action: {}
+
+    button_1_long:
+      name: Large Button – Long Press (on release)
+      description: Action for Large Button long press completion (long_release).
+      default: []
+      selector:
+        action: {}
+
+    # ---------------------------------------------------------------
+    # BUTTON 2 ACTIONS
+    # ---------------------------------------------------------------
+
+    button_2_single:
+      name: Small Button – Single Press
+      description: Action for Small Button single press (multi_press_1).
+      default: []
+      selector:
+        action: {}
+
+    button_2_double:
+      name: Small Button – Double Press
+      description: Action for Small Button double press (multi_press_2).
+      default: []
+      selector:
+        action: {}
+
+    button_2_long:
+      name: Small Button – Long Press (on release)
+      description: Action for Small Button long press completion (long_release).
+      default: []
+      selector:
+        action: {}
+
 variables:
   controller: !input controller_id
   btn1_entity: !input button_1_event
@@ -37,84 +96,99 @@ variables:
 
 trigger:
   - platform: state
-    entity_id:
-      - !input button_1_event
-      - !input button_2_event
+    id: button1
+    entity_id: !input button_1_event
+  - platform: state
+    id: button2
+    entity_id: !input button_2_event
 
 condition: []
 
 action:
   - variables:
-      entity: "{{ trigger.entity_id }}"
-      event_type: "{{ trigger.to_state.attributes.event_type }}"
-      steps: "{{ trigger.to_state.attributes.totalNumberOfPressesCounted | int(1) }}"
+      press_type: "{{ trigger.to_state.attributes.event_type }}"
+      trigger_id: "{{ trigger.id }}"
 
   - choose:
-      # --- LARGE BUTTON ---
-      - conditions: >
-          {{ entity == btn1_entity and event_type == 'multi_press_1' }}
+      # --- BUTTON 1 ---
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger_id == 'button1' and press_type == 'multi_press_1' }}
         sequence:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
               button: 1
               action: button_single
-      - conditions: >
-          {{ entity == btn1_entity and event_type == 'multi_press_2' }}
+          - choose:
+              - conditions: []
+                sequence: !input button_1_single
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger_id == 'button1' and press_type == 'multi_press_2' }}
         sequence:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
               button: 1
               action: button_double
-      - conditions: >
-          {{ entity == btn1_entity and event_type == 'long_press' }}
+          - choose:
+              - conditions: []
+                sequence: !input button_1_double
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger_id == 'button1' and press_type == 'long_release' }}
         sequence:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
               button: 1
               action: button_long
-      - conditions: >
-          {{ entity == btn1_entity and event_type == 'long_release' }}
-        sequence:
-          - event: uhb_controller_event
-            event_data:
-              controller: "{{ controller }}"
-              button: 1
-              action: button_release
-      # --- SMALL BUTTON ---
-      - conditions: >
-          {{ entity == btn2_entity and event_type == 'multi_press_1' }}
+          - choose:
+              - conditions: []
+                sequence: !input button_1_long
+      # --- BUTTON 2 ---
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger_id == 'button2' and press_type == 'multi_press_1' }}
         sequence:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
               button: 2
               action: button_single
-      - conditions: >
-          {{ entity == btn2_entity and event_type == 'multi_press_2' }}
+          - choose:
+              - conditions: []
+                sequence: !input button_2_single
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger_id == 'button2' and press_type == 'multi_press_2' }}
         sequence:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
               button: 2
               action: button_double
-      - conditions: >
-          {{ entity == btn2_entity and event_type == 'long_press' }}
+          - choose:
+              - conditions: []
+                sequence: !input button_2_double
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger_id == 'button2' and press_type == 'long_release' }}
         sequence:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
               button: 2
               action: button_long
-      - conditions: >
-          {{ entity == btn2_entity and event_type == 'long_release' }}
-        sequence:
-          - event: uhb_controller_event
-            event_data:
-              controller: "{{ controller }}"
-              button: 2
-              action: button_release
+          - choose:
+              - conditions: []
+                sequence: !input button_2_long
 
 mode: restart
