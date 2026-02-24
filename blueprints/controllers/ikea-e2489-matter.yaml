@@ -10,25 +10,25 @@ blueprint:
   homeassistant:
     min_version: 2025.12.0
 
-input:
-  controller_id:
-    name: Controller ID
-    description: Unique ID used in uhb_controller_event (e.g., bilresa_e2489_living)
-    default: bilresa_e2489
-    selector:
-      text: {}
+  input:
+    controller_id:
+      name: Controller ID
+      description: Unique ID used in uhb_controller_event (e.g., bilresa_e2489_living)
+      default: bilresa_e2489
+      selector:
+        text: {}
 
-  button_1_event:
-    name: Large Button - Event Entity
-    selector:
-      entity:
-        domain: event
+    button_1_event:
+      name: Large Button - Event Entity
+      selector:
+        entity:
+          domain: event
 
-  button_2_event:
-    name: Small Button - Event Entity
-    selector:
-      entity:
-        domain: event
+    button_2_event:
+      name: Small Button - Event Entity
+      selector:
+        entity:
+          domain: event
 
 variables:
   controller: !input controller_id
