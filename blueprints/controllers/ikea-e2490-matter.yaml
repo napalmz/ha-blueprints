@@ -1,23 +1,39 @@
 blueprint:
-  name: IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
+  name: Controller - IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
   author: napalmz
-  description: >
+  description: |
+    # Controller - IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
+
     Unified controller blueprint for IKEA BILRESA E2490 Matter scroll wheel.
     Supports macro 1/2/3, single & double click, long press/release,
     and wheel rotation with step count.
     Emits "uhb_controller_event" for use with my hooks.
+
     ℹ️ Version 2026.02.24
   domain: automation
   homeassistant:
     min_version: 2025.12.0
 
   input:
+    controller_device:
+      name: BILRESA Scroll Wheel Device
+      description: >
+        Select the IKEA BILRESA E2490 device. This is informational only.
+      selector:
+        device:
+          filter:
+            - integration: matter
+              manufacturer: IKEA of Sweden
+          multiple: false
+
     controller_id:
       name: Controller ID
       description: Unique ID used in uhb_controller_event (e.g. bilresa_e2490_living)
       default: bilresa_e2490
       selector:
         text:
+          multiline: false
+          multiple: false
 
     macro:
       name: Active Macro
@@ -34,19 +50,68 @@ blueprint:
       name: Pressed - Event entity (selected macro)
       selector:
         entity:
+          integration: matter
           domain: event
+          multiple: false
+          reorder: false
 
     rotate_forward_event:
       name: Scroll forward - Event entity (selected macro)
       selector:
         entity:
+          integration: matter
           domain: event
+          multiple: false
+          reorder: false
 
     rotate_backward_event:
       name: Scroll back - Event entity (selected macro)
       selector:
         entity:
+          integration: matter
           domain: event
+          multiple: false
+          reorder: false
+
+    # ---------------------------------------------------------------
+    # ACTIONS (all optional)
+    # ---------------------------------------------------------------
+    action_button_single:
+      name: Button Single Press
+      description: Action for single press (multi_press_1)
+      default: []
+      selector:
+        action: {}
+    action_button_double:
+      name: Button Double Press
+      description: Action for double press (multi_press_2)
+      default: []
+      selector:
+        action: {}
+    action_button_long:
+      name: Button Long Press
+      description: Action for long press (long_press)
+      default: []
+      selector:
+        action: {}
+    action_button_release:
+      name: Button Long Release
+      description: Action for long release (long_release)
+      default: []
+      selector:
+        action: {}
+    action_rotate_up:
+      name: Rotate Forward
+      description: Action for scroll forward (rotate_up)
+      default: []
+      selector:
+        action: {}
+    action_rotate_down:
+      name: Rotate Backward
+      description: Action for scroll backward (rotate_down)
+      default: []
+      selector:
+        action: {}
 
 variables:
   controller: !input controller_id
@@ -76,6 +141,7 @@ action:
       # CLICK / PRESS
       # -------------------------------------------------
 
+
       - conditions: >
           {{ entity == press_entity and event_type == 'multi_press_1' }}
         sequence:
@@ -84,6 +150,9 @@ action:
               controller: "{{ controller }}"
               macro: "{{ macro }}"
               action: button_single
+          - choose:
+              - conditions: []
+                sequence: !input action_button_single
 
       - conditions: >
           {{ entity == press_entity and event_type == 'multi_press_2' }}
@@ -93,6 +162,9 @@ action:
               controller: "{{ controller }}"
               macro: "{{ macro }}"
               action: button_double
+          - choose:
+              - conditions: []
+                sequence: !input action_button_double
 
       - conditions: >
           {{ entity == press_entity and event_type == 'long_press' }}
@@ -102,6 +174,9 @@ action:
               controller: "{{ controller }}"
               macro: "{{ macro }}"
               action: button_long
+          - choose:
+              - conditions: []
+                sequence: !input action_button_long
 
       - conditions: >
           {{ entity == press_entity and event_type == 'long_release' }}
@@ -111,10 +186,9 @@ action:
               controller: "{{ controller }}"
               macro: "{{ macro }}"
               action: button_release
-
-      # -------------------------------------------------
-      # ROTATE FORWARD
-      # -------------------------------------------------
+          - choose:
+              - conditions: []
+                sequence: !input action_button_release
 
       - conditions: "{{ entity == fwd_entity }}"
         sequence:
@@ -125,10 +199,9 @@ action:
               action: rotate_up
               args:
                 steps: "{{ steps }}"
-
-      # -------------------------------------------------
-      # ROTATE BACKWARD
-      # -------------------------------------------------
+          - choose:
+              - conditions: []
+                sequence: !input action_rotate_up
 
       - conditions: "{{ entity == back_entity }}"
         sequence:
@@ -139,5 +212,8 @@ action:
               action: rotate_down
               args:
                 steps: "{{ steps }}"
+          - choose:
+              - conditions: []
+                sequence: !input action_rotate_down
 
 mode: restart
