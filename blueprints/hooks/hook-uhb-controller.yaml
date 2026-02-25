@@ -1,0 +1,220 @@
+blueprint:
+  name: Hook - UHB Controller (Light, Cover, Media Player)
+  author: napalmz
+  description: |
+    # Hook - UHB Controller (Light, Cover, Media Player)
+
+    Hook avanzato per integrare i controller IKEA E2489/E2490 con luci, cover e media player tramite eventi custom `uhb_controller_event`.
+    Scegli il tipo di device, il controller compatibile e personalizza le azioni per ogni evento.
+
+    ℹ️ Version 2026.02.24
+  domain: automation
+  homeassistant:
+    min_version: 2025.12.0
+
+  input:
+    # --- Controller selection ---
+    controller_model:
+      name: Controller compatibile
+      description: Seleziona il modello di controller usato.
+      selector:
+        select:
+          options:
+            - IKEA BILRESA E2489 Dual Button
+            - IKEA BILRESA E2490 Scroll Wheel
+    controller_id:
+      name: Controller ID
+      description: Inserisci l'ID controller (deve corrispondere a quello usato nel blueprint controller)
+      selector:
+        text: {}
+    macro:
+      name: Macro (opzionale, solo E2490)
+      description: Seleziona la macro (se usata dal controller, es. E2490). Lascia vuoto per ignorare.
+      default: ''
+      selector:
+        text: {}
+
+    # --- Light section ---
+    light:
+      name: Luce da controllare
+      description: Seleziona la luce da controllare (lascia vuoto se non usi la sezione light)
+      default: ''
+      selector:
+        entity:
+          domain: light
+    # Azioni light
+    light_turn_on:
+      name: Accendi luce (es. single press)
+      default:
+        - service: light.turn_on
+          target:
+            entity_id: !input light
+      selector:
+        action: {}
+    light_turn_off:
+      name: Spegni luce (es. double press)
+      default:
+        - service: light.turn_off
+          target:
+            entity_id: !input light
+      selector:
+        action: {}
+    light_brightness_up:
+      name: Aumenta luminosità (es. rotate up)
+      default:
+        - service: light.turn_on
+          target:
+            entity_id: !input light
+          data:
+            brightness_step_pct: 10
+      selector:
+        action: {}
+    light_brightness_down:
+      name: Diminuisci luminosità (es. rotate down)
+      default:
+        - service: light.turn_on
+          target:
+            entity_id: !input light
+          data:
+            brightness_step_pct: -10
+      selector:
+        action: {}
+
+    # --- Cover section ---
+    cover:
+      name: Cover da controllare
+      description: Seleziona la cover da controllare (lascia vuoto se non usi la sezione cover)
+      default: ''
+      selector:
+        entity:
+          domain: cover
+    # Azioni cover
+    cover_open:
+      name: Apri cover (es. single press)
+      default:
+        - service: cover.open_cover
+          target:
+            entity_id: !input cover
+      selector:
+        action: {}
+    cover_close:
+      name: Chiudi cover (es. double press)
+      default:
+        - service: cover.close_cover
+          target:
+            entity_id: !input cover
+      selector:
+        action: {}
+    cover_stop:
+      name: Ferma cover (es. long press/release)
+      default:
+        - service: cover.stop_cover
+          target:
+            entity_id: !input cover
+      selector:
+        action: {}
+
+    # --- Media Player section ---
+    media_player:
+      name: Media Player da controllare
+      description: Seleziona il media player da controllare (lascia vuoto se non usi la sezione media player)
+      default: ''
+      selector:
+        entity:
+          domain: media_player
+    # Azioni media player
+    media_play_pause:
+      name: Play/Pausa (es. single press)
+      default:
+        - service: media_player.media_play_pause
+          target:
+            entity_id: !input media_player
+      selector:
+        action: {}
+    media_next:
+      name: Traccia successiva (es. rotate up)
+      default:
+        - service: media_player.media_next_track
+          target:
+            entity_id: !input media_player
+      selector:
+        action: {}
+    media_prev:
+      name: Traccia precedente (es. rotate down)
+      default:
+        - service: media_player.media_previous_track
+          target:
+            entity_id: !input media_player
+      selector:
+        action: {}
+    media_volume_up:
+      name: Volume + (es. double press)
+      default:
+        - service: media_player.volume_up
+          target:
+            entity_id: !input media_player
+      selector:
+        action: {}
+    media_volume_down:
+      name: Volume - (es. long press/release)
+      default:
+        - service: media_player.volume_down
+          target:
+            entity_id: !input media_player
+      selector:
+        action: {}
+
+mode: restart
+
+trigger:
+  - platform: event
+    event_type: uhb_controller_event
+    event_data:
+      controller: !input controller_id
+
+variables:
+  action_type: "{{ trigger.event.data.action }}"
+  macro: "{{ trigger.event.data.macro | default('') }}"
+  steps: "{{ trigger.event.data.args.steps | default(1) }}"
+  macro_filter: !input macro
+  controller_model: !input controller_model
+
+condition:
+  - condition: or
+    conditions:
+      - condition: template
+        value_template: "{{ macro_filter == '' }}"
+      - condition: template
+        value_template: "{{ macro_filter == macro }}"
+
+action:
+  - choose:
+      # --- LIGHT ---
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2489 Dual Button', 'IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'button_single' and (light != '') }}"
+        sequence: !input light_turn_on
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2489 Dual Button', 'IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'button_double' and (light != '') }}"
+        sequence: !input light_turn_off
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'rotate_up' and (light != '') }}"
+        sequence: !input light_brightness_up
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'rotate_down' and (light != '') }}"
+        sequence: !input light_brightness_down
+
+      # --- COVER ---
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2489 Dual Button', 'IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'button_single' and (cover != '') }}"
+        sequence: !input cover_open
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2489 Dual Button', 'IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'button_double' and (cover != '') }}"
+        sequence: !input cover_close
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2489 Dual Button', 'IKEA BILRESA E2490 Scroll Wheel'] and action_type in ['button_long', 'button_release'] and (cover != '') }}"
+        sequence: !input cover_stop
+
+      # --- MEDIA PLAYER ---
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2489 Dual Button', 'IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'button_single' and (media_player != '') }}"
+        sequence: !input media_play_pause
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'rotate_up' and (media_player != '') }}"
+        sequence: !input media_next
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'rotate_down' and (media_player != '') }}"
+        sequence: !input media_prev
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2489 Dual Button', 'IKEA BILRESA E2490 Scroll Wheel'] and action_type == 'button_double' and (media_player != '') }}"
+        sequence: !input media_volume_up
+      - conditions: "{{ controller_model in ['IKEA BILRESA E2489 Dual Button', 'IKEA BILRESA E2490 Scroll Wheel'] and action_type in ['button_long', 'button_release'] and (media_player != '') }}"
+        sequence: !input media_volume_down
