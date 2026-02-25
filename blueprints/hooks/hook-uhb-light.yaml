@@ -1,0 +1,170 @@
+blueprint:
+  name: Hook - UHB Controller Light (Smart)
+  author: napalmz
+  description: |
+    # Hook - UHB Controller Light (Smart)
+
+    Gestione avanzata per luci tramite eventi custom `uhb_controller_event` dei controller IKEA E2489 (2 pulsanti) ed E2490 (pulsante+rotella).
+    La logica delle azioni si adatta automaticamente al tipo di controller:
+    - E2489: pulsante 1 accende/aumenta, pulsante 2 spegne/diminuisce
+    - E2490: pressione = toggle, rotazione = regola luminosità, long press = accendi al minimo
+
+    ℹ️ Version 2026.02.25
+  domain: automation
+  homeassistant:
+    min_version: 2025.12.0
+
+  input:
+    controller_model:
+      name: Modello controller
+      description: Seleziona il modello di controller usato
+      selector:
+        select:
+          options:
+            - IKEA BILRESA E2489 Dual Button
+            - IKEA BILRESA E2490 Scroll Wheel
+    controller_device:
+      name: Controller Device
+      description: Seleziona il dispositivo controller (deve essere lo stesso usato nel blueprint controller)
+      selector:
+        device:
+          filter:
+            - integration: matter
+              manufacturer: IKEA of Sweden
+              model:
+                - BILRESA dual button
+                - BILRESA scroll wheel
+          multiple: false
+    macro:
+      name: Macro (opzionale, solo E2490)
+      description: Seleziona la macro (se usata dal controller, es. E2490). Lascia vuoto per ignorare.
+      default: ''
+      selector:
+        select:
+          options:
+            - ""
+            - "1"
+            - "2"
+            - "3"
+    light:
+      name: Luce da controllare
+      description: Seleziona la luce da controllare
+      selector:
+        entity:
+          domain: light
+    brightness_step:
+      name: Step luminosità (%)
+      description: Di quanto aumentare/diminuire la luminosità ad ogni rotazione o step.
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 50
+          step: 1
+          unit_of_measurement: '%'
+
+mode: restart
+
+trigger:
+  - platform: event
+    event_type: uhb_controller_event
+    event_data:
+      controller: !input controller_device
+
+variables:
+  action_type: "{{ trigger.event.data.action }}"
+  button: "{{ trigger.event.data.button | default(1) }}"
+  macro: "{{ trigger.event.data.macro | default('') }}"
+  macro_filter: !input macro
+  light: !input light
+  brightness_step: !input brightness_step
+  controller_model: !input controller_model
+  controller_device: !input controller_device
+
+condition:
+  - condition: or
+    conditions:
+      - condition: template
+        value_template: "{{ macro_filter == '' }}"
+      - condition: template
+        value_template: "{{ macro_filter == macro }}"
+
+action:
+  - choose:
+      # --- E2489: Pulsante 1 (accendi/aumenta) ---
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type == 'button_single' }}"
+        sequence:
+          - choose:
+              - conditions: "{{ states(light) == 'off' }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      brightness_pct: 10
+              - conditions: "{{ states(light) == 'on' }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type in ['button_long', 'long_press'] }}"
+        sequence:
+          - repeat:
+              while: "{{ is_state(light, 'on') and state_attr(light, 'brightness') < 255 }}"
+              sequence:
+                - service: light.turn_on
+                  target:
+                    entity_id: "{{ light }}"
+                  data:
+                    brightness_step_pct: "{{ brightness_step }}"
+                - delay: 0.2
+      # --- E2489: Pulsante 2 (spegni/diminuisci) ---
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 2 and action_type == 'button_single' }}"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: "{{ light }}"
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 2 and action_type in ['button_long', 'long_press'] }}"
+        sequence:
+          - repeat:
+              while: "{{ is_state(light, 'on') and state_attr(light, 'brightness') > 1 }}"
+              sequence:
+                - service: light.turn_on
+                  target:
+                    entity_id: "{{ light }}"
+                  data:
+                    brightness_step_pct: "-{{ brightness_step }}"
+                - delay: 0.2
+          - choose:
+              - conditions: "{{ is_state(light, 'on') and (state_attr(light, 'brightness') | int(0)) <= 1 }}"
+                sequence:
+                  - service: light.turn_off
+                    target:
+                      entity_id: "{{ light }}"
+      # --- E2490: Pulsante/Rotella ---
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'button_single' }}"
+        sequence:
+          - service: light.toggle
+            target:
+              entity_id: "{{ light }}"
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'long_press' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: "{{ light }}"
+            data:
+              brightness_pct: 10
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'rotate_up' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: "{{ light }}"
+            data:
+              brightness_step_pct: "{{ brightness_step }}"
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'rotate_down' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: "{{ light }}"
+            data:
+              brightness_step_pct: "-{{ brightness_step }}"

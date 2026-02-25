@@ -1,0 +1,116 @@
+blueprint:
+  name: Hook - UHB Controller Media Player
+  author: napalmz
+  description: |
+    # Hook - UHB Controller Media Player
+
+    Permette di controllare un media player tramite eventi custom `uhb_controller_event` generati dai controller IKEA E2489/E2490.
+    Seleziona solo il media player da comandare e, opzionalmente, regola lo step del volume.
+
+    ℹ️ Version 2026.02.25
+  domain: automation
+  homeassistant:
+    min_version: 2025.12.0
+
+  input:
+    controller_device:
+      name: Controller Device
+      description: Seleziona il dispositivo controller (deve essere lo stesso usato nel blueprint controller)
+      selector:
+        device:
+          filter:
+            - integration: matter
+              manufacturer: IKEA of Sweden
+              model:
+                - BILRESA dual button
+                - BILRESA scroll wheel
+          multiple: false
+    macro:
+      name: Macro (opzionale, solo E2490)
+      description: Seleziona la macro (se usata dal controller, es. E2490). Lascia vuoto per ignorare.
+      default: ''
+      selector:
+        select:
+          options:
+            - ""
+            - "1"
+            - "2"
+            - "3"
+    media_player:
+      name: Media Player da controllare
+      description: Seleziona il media player da controllare
+      selector:
+        entity:
+          domain: media_player
+    volume_step:
+      name: Step volume
+      description: Di quanto aumentare/diminuire il volume (0.01 = 1%)
+      default: 0.05
+      selector:
+        number:
+          min: 0.01
+          max: 0.5
+          step: 0.01
+          unit_of_measurement: ''
+
+mode: restart
+
+trigger:
+  - platform: event
+    event_type: uhb_controller_event
+    event_data:
+      controller: !input controller_device
+
+variables:
+  action_type: "{{ trigger.event.data.action }}"
+  macro: "{{ trigger.event.data.macro | default('') }}"
+  macro_filter: !input macro
+  media_player: !input media_player
+  volume_step: !input volume_step
+  controller_device: !input controller_device
+
+condition:
+  - condition: or
+    conditions:
+      - condition: template
+        value_template: "{{ macro_filter == '' }}"
+      - condition: template
+        value_template: "{{ macro_filter == macro }}"
+
+action:
+  - choose:
+      - conditions: "{{ action_type == 'button_single' }}"
+        sequence:
+          - service: media_player.media_play_pause
+            target:
+              entity_id: "{{ media_player }}"
+      - conditions: "{{ action_type == 'button_double' }}"
+        sequence:
+          - service: media_player.volume_up
+            target:
+              entity_id: "{{ media_player }}"
+          - service: media_player.volume_set
+            target:
+              entity_id: "{{ media_player }}"
+            data:
+              volume_level: "{{ [state_attr(media_player, 'volume_level') + volume_step, 1.0] | min }}"
+      - conditions: "{{ action_type in ['button_long', 'button_release'] }}"
+        sequence:
+          - service: media_player.volume_down
+            target:
+              entity_id: "{{ media_player }}"
+          - service: media_player.volume_set
+            target:
+              entity_id: "{{ media_player }}"
+            data:
+              volume_level: "{{ [state_attr(media_player, 'volume_level') - volume_step, 0.0] | max }}"
+      - conditions: "{{ action_type == 'rotate_up' }}"
+        sequence:
+          - service: media_player.media_next_track
+            target:
+              entity_id: "{{ media_player }}"
+      - conditions: "{{ action_type == 'rotate_down' }}"
+        sequence:
+          - service: media_player.media_previous_track
+            target:
+              entity_id: "{{ media_player }}"

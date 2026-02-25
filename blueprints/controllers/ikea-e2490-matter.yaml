@@ -27,15 +27,6 @@ blueprint:
               model: BILRESA scroll wheel
           multiple: false
 
-    controller_id:
-      name: Controller ID
-      description: Unique ID used in uhb_controller_event (e.g. bilresa_e2490_living)
-      default: bilresa_e2490
-      selector:
-        text:
-          multiline: false
-          multiple: false
-
     macro:
       name: Active Macro
       description: Select which macro (1 / 2 / 3) this automation represents.
@@ -121,7 +112,8 @@ blueprint:
         action: {}
 
 variables:
-  controller: !input controller_id
+  controller_device: !input controller_device
+  controller: "{{ controller_device }}"
   macro: !input macro
   press_entity: !input press_event
   fwd_entity: !input rotate_forward_event

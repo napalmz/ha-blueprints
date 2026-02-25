@@ -26,15 +26,6 @@ blueprint:
               model: BILRESA dual button
           multiple: false
 
-    controller_id:
-      name: Controller ID
-      description: Unique ID used in uhb_controller_event (e.g., bilresa_e2489_living)
-      default: bilresa_e2489
-      selector:
-        text:
-          multiline: false
-          multiple: false
-
     button_1_event:
       name: Large Button - Event Entity
       selector:
@@ -116,7 +107,8 @@ blueprint:
         action: {}
 
 variables:
-  controller: !input controller_id
+  controller_device: !input controller_device
+  controller: "{{ controller_device }}"
   btn1_entity: !input button_1_event
   btn2_entity: !input button_2_event
 

@@ -1,0 +1,85 @@
+blueprint:
+  name: Hook - UHB Controller Cover
+  author: napalmz
+  description: |
+    # Hook - UHB Controller Cover
+
+    Permette di controllare una cover tramite eventi custom `uhb_controller_event` generati dai controller IKEA E2489/E2490.
+    Seleziona solo la cover da comandare.
+
+    ℹ️ Version 2026.02.25
+  domain: automation
+  homeassistant:
+    min_version: 2025.12.0
+
+  input:
+    controller_device:
+      name: Controller Device
+      description: Seleziona il dispositivo controller (deve essere lo stesso usato nel blueprint controller)
+      selector:
+        device:
+          filter:
+            - integration: matter
+              manufacturer: IKEA of Sweden
+              model:
+                - BILRESA dual button
+                - BILRESA scroll wheel
+          multiple: false
+    macro:
+      name: Macro (opzionale, solo E2490)
+      description: Seleziona la macro (se usata dal controller, es. E2490). Lascia vuoto per ignorare.
+      default: ''
+      selector:
+        select:
+          options:
+            - ""
+            - "1"
+            - "2"
+            - "3"
+    cover:
+      name: Cover da controllare
+      description: Seleziona la cover da controllare
+      selector:
+        entity:
+          domain: cover
+
+mode: restart
+
+trigger:
+  - platform: event
+    event_type: uhb_controller_event
+    event_data:
+      controller: !input controller_device
+
+variables:
+  action_type: "{{ trigger.event.data.action }}"
+  macro: "{{ trigger.event.data.macro | default('') }}"
+  macro_filter: !input macro
+  cover: !input cover
+  controller_device: !input controller_device
+
+condition:
+  - condition: or
+    conditions:
+      - condition: template
+        value_template: "{{ macro_filter == '' }}"
+      - condition: template
+        value_template: "{{ macro_filter == macro }}"
+
+action:
+  - choose:
+      - conditions: "{{ action_type == 'button_single' }}"
+        sequence:
+          - service: cover.open_cover
+            target:
+              entity_id: "{{ cover }}"
+      - conditions: "{{ action_type == 'button_double' }}"
+        sequence:
+          - service: cover.close_cover
+            target:
+              entity_id: "{{ cover }}"
+      - conditions: "{{ action_type in ['button_long', 'button_release'] }}"
+        sequence:
+          - service: cover.stop_cover
+            target:
+              entity_id: "{{ cover }}"
