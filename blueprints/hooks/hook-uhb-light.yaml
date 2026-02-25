@@ -52,16 +52,101 @@ blueprint:
       selector:
         entity:
           domain: light
-    brightness_step:
-      name: Step luminosità (%)
-      description: Di quanto aumentare/diminuire la luminosità ad ogni rotazione o step.
+    light_color_mode:
+      name: Modalità colore luce (opzionale)
+      description: Specifica come il controller imposta il colore della luce. Se non sei sicuro, seleziona "Auto".
+      default: Auto
+      selector:
+        select:
+          options:
+            - Auto
+            - Color Temperature
+            - Hue - Saturation
+            - None
+    light_transition:
+      name: Transizione luce (ms)
+      description: Tempo in millisecondi per la transizione on/off (se supportata).
+      default: 250
+      selector:
+        number:
+          min: 0
+          max: 60000
+          step: 1
+          unit_of_measurement: milliseconds
+          mode: box
+    min_brightness:
+      name: Luminosità minima (opzionale)
+      description: Luminosità minima impostabile.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 255
+          step: 1
+          unit_of_measurement: brightness
+          mode: slider
+    max_brightness:
+      name: Luminosità massima (opzionale)
+      description: Luminosità massima impostabile.
+      default: 255
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+          unit_of_measurement: brightness
+          mode: slider
+    brightness_steps_short:
+      name: Step luminosità - azioni brevi
+      description: Numero di step da min a max luminosità per azioni brevi (es. pressione).
       default: 10
       selector:
         number:
           min: 1
-          max: 50
+          max: 255
           step: 1
-          unit_of_measurement: '%'
+          unit_of_measurement: steps
+          mode: box
+    brightness_steps_long:
+      name: Step luminosità - azioni lunghe
+      description: Numero di step da min a max luminosità per azioni lunghe (es. hold/rotazione).
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 255
+          step: 1
+          unit_of_measurement: steps
+          mode: box
+    force_brightness:
+      name: Forza luminosità all'accensione
+      description: Forza la luminosità al valore "On brightness" quando la luce viene accesa.
+      default: false
+      selector:
+        boolean:
+    on_brightness:
+      name: Luminosità all'accensione
+      description: Valore di luminosità da forzare all'accensione.
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+          unit_of_measurement: brightness
+          mode: slider
+    smooth_power_on:
+      name: Accensione soft (minima luminosità)
+      description: Accendi la luce al minimo quando si aumenta la luminosità da off.
+      default: true
+      selector:
+        boolean:
+    smooth_power_off:
+      name: Spegnimento soft (da minimo)
+      description: Permetti di spegnere la luce quando si abbassa la luminosità al minimo.
+      default: true
+      selector:
+        boolean:
 
 mode: restart
 
@@ -77,7 +162,18 @@ variables:
   macro: "{{ trigger.event.data.macro | default('') }}"
   macro_filter: !input macro
   light: !input light
-  brightness_step: !input brightness_step
+  light_color_mode: !input light_color_mode
+  light_transition: !input light_transition
+  min_brightness: !input min_brightness
+  max_brightness: !input max_brightness
+  brightness_steps_short: !input brightness_steps_short
+  brightness_steps_long: !input brightness_steps_long
+  force_brightness: !input force_brightness
+  on_brightness: !input on_brightness
+  smooth_power_on: !input smooth_power_on
+  smooth_power_off: !input smooth_power_off
+  step_short: "{{ (max_brightness-min_brightness)/brightness_steps_short }}"
+  step_long: "{{ (max_brightness-min_brightness)/brightness_steps_long }}"
   controller_model: !input controller_model
   controller_device: !input controller_device
 
@@ -95,76 +191,145 @@ action:
       - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type == 'button_single' }}"
         sequence:
           - choose:
-              - conditions: "{{ states(light) == 'off' }}"
+              - conditions: "{{ states(light) == 'off' and smooth_power_on }}"
                 sequence:
                   - service: light.turn_on
                     target:
                       entity_id: "{{ light }}"
                     data:
-                      brightness_pct: 10
+                      brightness: "{{ min_brightness }}"
+                      transition: "{{ light_transition / 1000 }}"
+              - conditions: "{{ states(light) == 'off' and not smooth_power_on }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      transition: "{{ light_transition / 1000 }}"
+              - conditions: "{{ states(light) == 'on' and force_brightness }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      brightness: "{{ on_brightness }}"
+                      transition: "{{ light_transition / 1000 }}"
               - conditions: "{{ states(light) == 'on' }}"
                 sequence:
                   - service: light.turn_on
                     target:
                       entity_id: "{{ light }}"
+                    data:
+                      brightness: "{{ [state_attr(light,'brightness')+step_short, min_brightness] | max, max_brightness] | min }}"
+                      transition: "{{ light_transition / 1000 }}"
       - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type in ['button_long', 'long_press'] }}"
         sequence:
           - repeat:
-              while: "{{ is_state(light, 'on') and state_attr(light, 'brightness') < 255 }}"
+              while: "{{ is_state(light, 'on') and state_attr(light, 'brightness') < max_brightness }}"
               sequence:
                 - service: light.turn_on
                   target:
                     entity_id: "{{ light }}"
                   data:
-                    brightness_step_pct: "{{ brightness_step }}"
-                - delay: 0.2
+                    brightness: "{{ [state_attr(light,'brightness')+step_long, min_brightness] | max, max_brightness] | min }}"
+                    transition: "{{ light_transition / 1000 }}"
+                - delay: 0.25
       # --- E2489: Pulsante 2 (spegni/diminuisci) ---
       - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 2 and action_type == 'button_single' }}"
         sequence:
           - service: light.turn_off
             target:
               entity_id: "{{ light }}"
+            data:
+              transition: "{{ light_transition / 1000 }}"
       - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 2 and action_type in ['button_long', 'long_press'] }}"
         sequence:
           - repeat:
-              while: "{{ is_state(light, 'on') and state_attr(light, 'brightness') > 1 }}"
+              while: "{{ is_state(light, 'on') and state_attr(light, 'brightness') > min_brightness }}"
               sequence:
                 - service: light.turn_on
                   target:
                     entity_id: "{{ light }}"
                   data:
-                    brightness_step_pct: "-{{ brightness_step }}"
-                - delay: 0.2
+                    brightness: "{{ [state_attr(light,'brightness')-step_long, min_brightness] | max, max_brightness] | min }}"
+                    transition: "{{ light_transition / 1000 }}"
+                - delay: 0.25
           - choose:
-              - conditions: "{{ is_state(light, 'on') and (state_attr(light, 'brightness') | int(0)) <= 1 }}"
+              - conditions: "{{ is_state(light, 'on') and smooth_power_off and (state_attr(light, 'brightness') | int(0)) <= min_brightness }}"
                 sequence:
                   - service: light.turn_off
                     target:
                       entity_id: "{{ light }}"
+                    data:
+                      transition: "{{ light_transition / 1000 }}"
       # --- E2490: Pulsante/Rotella ---
       - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'button_single' }}"
         sequence:
-          - service: light.toggle
-            target:
-              entity_id: "{{ light }}"
+          - choose:
+              - conditions: "{{ force_brightness }}"
+                sequence:
+                  - service: light.toggle
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      brightness: "{{ on_brightness }}"
+                      transition: "{{ light_transition / 1000 }}"
+              - conditions: "{{ not force_brightness }}"
+                sequence:
+                  - service: light.toggle
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      transition: "{{ light_transition / 1000 }}"
       - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'long_press' }}"
         sequence:
           - service: light.turn_on
             target:
               entity_id: "{{ light }}"
             data:
-              brightness_pct: 10
+              brightness: "{{ min_brightness }}"
+              transition: "{{ light_transition / 1000 }}"
       - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'rotate_up' }}"
         sequence:
-          - service: light.turn_on
-            target:
-              entity_id: "{{ light }}"
-            data:
-              brightness_step_pct: "{{ brightness_step }}"
-      - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'rotate_down' }}"
+          - choose:
+              - conditions: "{{ states(light) == 'off' and smooth_power_on }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      brightness: "{{ min_brightness }}"
+                      transition: "{{ light_transition / 1000 }}"
+              - conditions: "{{ states(light) == 'off' and not smooth_power_on }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      transition: "{{ light_transition / 1000 }}"
+              - conditions: "{{ states(light) == 'on' }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      brightness: "{{ [state_attr(light,'brightness')+step_short, min_brightness] | max, max_brightness] | min }}"
+                      transition: "{{ light_transition / 1000 }}"
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'rotate_down' and states(light) == 'on' }}"
         sequence:
-          - service: light.turn_on
-            target:
-              entity_id: "{{ light }}"
-            data:
-              brightness_step_pct: "-{{ brightness_step }}"
+          - choose:
+              - conditions: "{{ smooth_power_off and state_attr(light,'brightness') == min_brightness }}"
+                sequence:
+                  - service: light.turn_off
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      transition: "{{ light_transition / 1000 }}"
+              - conditions: "{{ state_attr(light,'brightness') > min_brightness }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      brightness: "{{ [state_attr(light,'brightness')-step_short, min_brightness] | max, max_brightness] | min }}"
+                      transition: "{{ light_transition / 1000 }}"
