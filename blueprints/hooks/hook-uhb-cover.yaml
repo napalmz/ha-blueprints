@@ -21,9 +21,10 @@ blueprint:
           filter:
             - integration: matter
               manufacturer: IKEA of Sweden
-              model:
-                - BILRESA dual button
-                - BILRESA scroll wheel
+              model: BILRESA dual button
+            - integration: matter
+              manufacturer: IKEA of Sweden
+              model: BILRESA scroll wheel
           multiple: false
     macro:
       name: Macro (opzionale, solo E2490)
@@ -32,7 +33,6 @@ blueprint:
       selector:
         select:
           options:
-            - ""
             - "1"
             - "2"
             - "3"
