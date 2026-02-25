@@ -1,8 +1,8 @@
 blueprint:
-  name: Hook - UHB Controller Cover (Matter · Unified)
+  name: 🪝 Hook - UHB Controller Cover (Matter · Unified)
   author: napalmz
   description: |
-    # Hook - UHB Controller Cover (Matter · Unified)
+    # 🪝 Hook - UHB Controller Cover (Matter · Unified)
 
     Permette di controllare una cover tramite eventi custom `uhb_controller_event` generati dai controller IKEA E2489/E2490.
     Seleziona solo la cover da comandare.

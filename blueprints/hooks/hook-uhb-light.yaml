@@ -1,8 +1,8 @@
 blueprint:
-  name: Hook - UHB Controller Light (Smart) (Matter · Unified)
+  name: 🪝 Hook - UHB Controller Light (Matter · Unified)
   author: napalmz
   description: |
-    # Hook - UHB Controller Light (Smart) (Matter · Unified)
+    # 🪝 Hook - UHB Controller Light (Matter · Unified)
 
     Gestione avanzata per luci tramite eventi custom `uhb_controller_event` dei controller IKEA E2489 (2 pulsanti) ed E2490 (pulsante+rotella).
     La logica delle azioni si adatta automaticamente al tipo di controller:

@@ -1,8 +1,8 @@
 blueprint:
-  name: Hook - UHB Controller Media Player (Matter · Unified)
+  name: 🪝 Hook - UHB Controller Media Player (Matter · Unified)
   author: napalmz
   description: |
-    # Hook - UHB Controller Media Player (Matter · Unified)
+    # 🪝 Hook - UHB Controller Media Player (Matter · Unified)
 
     Permette di controllare un media player tramite eventi custom `uhb_controller_event` generati dai controller IKEA E2489/E2490.
     Seleziona solo il media player da comandare e, opzionalmente, regola lo step del volume.

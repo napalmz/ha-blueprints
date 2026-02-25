@@ -1,8 +1,8 @@
 blueprint:
-  name: Controller - IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
+  name: 🎮 Controller - IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
   author: napalmz
   description: |
-    # Controller - IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
+    # 🎮 Controller - IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
 
     Unified controller blueprint for IKEA BILRESA E2490 Matter scroll wheel.
     Supports macro 1/2/3, single & double click, long press/release,
