@@ -313,7 +313,7 @@ action:
                     target:
                       entity_id: "{{ light }}"
                     data:
-                      brightness: "{{ [state_attr(light,'brightness')+step_short, min_brightness] | max, max_brightness] | min }}"
+                      brightness: "{{ [ [state_attr(light,'brightness')+step_short, min_brightness] | max, max_brightness ] | min }}"
                       transition: "{{ light_transition / 1000 }}"
       - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'rotate_down' and states(light) == 'on' }}"
         sequence:
