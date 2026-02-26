@@ -220,7 +220,7 @@ action:
                     target:
                       entity_id: "{{ light }}"
                     data:
-                      brightness: "{{ [state_attr(light,'brightness')+step_short, min_brightness] | max, max_brightness] | min }}"
+                      brightness: "{{ [ [state_attr(light,'brightness')+step_short, min_brightness] | max, max_brightness ] | min }}"
                       transition: "{{ light_transition / 1000 }}"
       - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type in ['button_long', 'long_press'] }}"
         sequence:
@@ -231,7 +231,7 @@ action:
                   target:
                     entity_id: "{{ light }}"
                   data:
-                    brightness: "{{ [state_attr(light,'brightness')+step_long, min_brightness] | max, max_brightness] | min }}"
+                    brightness: "{{ [ [state_attr(light,'brightness')+step_long, min_brightness] | max, max_brightness ] | min }}"
                     transition: "{{ light_transition / 1000 }}"
                 - delay: 0.25
       # --- E2489: Pulsante 2 (spegni/diminuisci) ---
@@ -251,7 +251,7 @@ action:
                   target:
                     entity_id: "{{ light }}"
                   data:
-                    brightness: "{{ [state_attr(light,'brightness')-step_long, min_brightness] | max, max_brightness] | min }}"
+                    brightness: "{{ [ [state_attr(light,'brightness')-step_long, min_brightness] | max, max_brightness ] | min }}"
                     transition: "{{ light_transition / 1000 }}"
                 - delay: 0.25
           - choose:
@@ -331,5 +331,5 @@ action:
                     target:
                       entity_id: "{{ light }}"
                     data:
-                      brightness: "{{ [state_attr(light,'brightness')-step_short, min_brightness] | max, max_brightness] | min }}"
+                      brightness: "{{ [ [state_attr(light,'brightness')-step_short, min_brightness] | max, max_brightness ] | min }}"
                       transition: "{{ light_transition / 1000 }}"
