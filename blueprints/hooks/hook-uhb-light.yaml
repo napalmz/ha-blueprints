@@ -222,8 +222,24 @@ action:
                     data:
                       brightness: "{{ ([ (state_attr(light,'brightness')|int(0) + (step_short|int)), min_brightness|int ] | max, max_brightness|int ) | min }}"
                       transition: "{{ light_transition / 1000 }}"
-      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type in ['button_long', 'long_press'] }}"
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type in ['button_long', 'long_press', 'button_long_press'] }}"
         sequence:
+          - choose:
+              - conditions: "{{ states(light) == 'off' and smooth_power_on }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      brightness: "{{ min_brightness }}"
+                      transition: "{{ light_transition / 1000 }}"
+              - conditions: "{{ states(light) == 'off' and not smooth_power_on }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      transition: "{{ light_transition / 1000 }}"
           - repeat:
               while: "{{ is_state(light, 'on') and state_attr(light, 'brightness') < max_brightness }}"
               sequence:
@@ -242,7 +258,7 @@ action:
               entity_id: "{{ light }}"
             data:
               transition: "{{ light_transition / 1000 }}"
-      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 2 and action_type in ['button_long', 'long_press'] }}"
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 2 and action_type in ['button_long', 'long_press', 'button_long_press'] }}"
         sequence:
           - repeat:
               while: "{{ is_state(light, 'on') and state_attr(light, 'brightness') > min_brightness }}"
