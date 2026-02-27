@@ -26,9 +26,9 @@ blueprint:
               manufacturer: IKEA of Sweden
               model: BILRESA scroll wheel
           multiple: false
-    macro:
-      name: Macro (opzionale, solo E2490)
-      description: Seleziona la macro (se usata dal controller, es. E2490). Lascia vuoto per ignorare.
+    channel:
+      name: Channel (opzionale, solo E2490)
+      description: Seleziona il canale (se usato dal controller, es. E2490). Lascia vuoto per ignorare.
       default: ''
       selector:
         select:
@@ -63,8 +63,8 @@ trigger:
 
 variables:
   action_type: "{{ trigger.event.data.action }}"
-  macro: "{{ trigger.event.data.macro | default('') }}"
-  macro_filter: !input macro
+  channel: "{{ trigger.event.data.channel | default('') }}"
+  channel_filter: !input channel
   media_player: !input media_player
   volume_step: !input volume_step
   controller_device: !input controller_device
@@ -73,9 +73,9 @@ condition:
   - condition: or
     conditions:
       - condition: template
-        value_template: "{{ macro_filter == '' }}"
+        value_template: "{{ channel_filter == '' }}"
       - condition: template
-        value_template: "{{ macro_filter == macro }}"
+        value_template: "{{ channel_filter == channel }}"
 
 action:
   - choose:

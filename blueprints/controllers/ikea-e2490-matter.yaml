@@ -5,7 +5,7 @@ blueprint:
     # 🎮 Controller - IKEA BILRESA E2490 Scroll Wheel (Matter · Unified)
 
     Unified controller blueprint for IKEA BILRESA E2490 Matter scroll wheel.
-    Supports macro 1/2/3, single & double click, long press/release,
+    Supports channel 1/2/3, single & double click, long press/release,
     and wheel rotation with step count.
     Emits "uhb_controller_event" for use with my hooks.
 
@@ -27,9 +27,9 @@ blueprint:
               model: BILRESA scroll wheel
           multiple: false
 
-    macro:
-      name: Active Macro
-      description: Select which macro (1 / 2 / 3) this automation represents.
+    channel:
+      name: Active Channel
+      description: Select which channel (1 / 2 / 3) this automation represents.
       default: "1"
       selector:
         select:
@@ -39,7 +39,7 @@ blueprint:
             - "3"
 
     press_event:
-      name: Pressed - Event entity (selected macro)
+      name: Pressed - Event entity (selected channel)
       selector:
         entity:
           integration: matter
@@ -48,7 +48,7 @@ blueprint:
           reorder: false
 
     rotate_forward_event:
-      name: Scroll forward - Event entity (selected macro)
+      name: Scroll forward - Event entity (selected channel)
       selector:
         entity:
           integration: matter
@@ -57,7 +57,7 @@ blueprint:
           reorder: false
 
     rotate_backward_event:
-      name: Scroll back - Event entity (selected macro)
+      name: Scroll back - Event entity (selected channel)
       selector:
         entity:
           integration: matter
@@ -114,7 +114,7 @@ blueprint:
 variables:
   controller_device: !input controller_device
   controller: "{{ controller_device }}"
-  macro: !input macro
+  channel: !input channel
   press_entity: !input press_event
   fwd_entity: !input rotate_forward_event
   back_entity: !input rotate_backward_event
@@ -145,7 +145,7 @@ action:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
-              macro: "{{ macro }}"
+              channel: "{{ channel }}"
               action: button_single
           - choose:
               - conditions: []
@@ -157,7 +157,7 @@ action:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
-              macro: "{{ macro }}"
+              channel: "{{ channel }}"
               action: button_double
           - choose:
               - conditions: []
@@ -169,7 +169,7 @@ action:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
-              macro: "{{ macro }}"
+              channel: "{{ channel }}"
               action: button_triple
           - choose:
               - conditions: []
@@ -181,7 +181,7 @@ action:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
-              macro: "{{ macro }}"
+              channel: "{{ channel }}"
               action: button_long
           - choose:
               - conditions: []
@@ -193,7 +193,7 @@ action:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
-              macro: "{{ macro }}"
+              channel: "{{ channel }}"
               action: button_release
           - choose:
               - conditions: []
@@ -204,7 +204,7 @@ action:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
-              macro: "{{ macro }}"
+              channel: "{{ channel }}"
               action: rotate_up
               args:
                 steps: "{{ steps }}"
@@ -217,7 +217,7 @@ action:
           - event: uhb_controller_event
             event_data:
               controller: "{{ controller }}"
-              macro: "{{ macro }}"
+              channel: "{{ channel }}"
               action: rotate_down
               args:
                 steps: "{{ steps }}"
