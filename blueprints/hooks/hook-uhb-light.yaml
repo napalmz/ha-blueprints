@@ -191,6 +191,14 @@ action:
       - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type == 'button_single' }}"
         sequence:
           - choose:
+              - conditions: "{{ states(light) == 'off' and force_brightness }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      brightness: "{{ on_brightness }}"
+                      transition: "{{ light_transition / 1000 }}"
               - conditions: "{{ states(light) == 'off' and smooth_power_on }}"
                 sequence:
                   - service: light.turn_on
