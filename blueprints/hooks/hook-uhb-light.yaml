@@ -258,6 +258,17 @@ action:
                     brightness: "{{ ([ (state_attr(light,'brightness')|int(0) + (step_long|int)), min_brightness|int ] | max, max_brightness|int ) | min }}"
                     transition: "{{ light_transition / 1000 }}"
                 - delay: 0.25
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 1 and action_type in ['button_double', 'button_double_press', 'double_press'] }}"
+        sequence:
+          - choose:
+              - conditions: "{{ 'color_temp' in (state_attr(light, 'supported_color_modes') | default([], true)) }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      color_temp: "{{ [ (state_attr(light,'color_temp') | int(state_attr(light,'max_mireds') | int(500)) ) - 50, state_attr(light,'min_mireds') | int(153) ] | max }}"
+                      transition: "{{ light_transition / 1000 }}"
       # --- E2489: Pulsante 2 (spegni/diminuisci) ---
       - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 2 and action_type == 'button_single' }}"
         sequence:
@@ -285,6 +296,17 @@ action:
                     target:
                       entity_id: "{{ light }}"
                     data:
+                      transition: "{{ light_transition / 1000 }}"
+      - conditions: "{{ controller_model == 'IKEA BILRESA E2489 Dual Button' and button == 2 and action_type in ['button_double', 'button_double_press', 'double_press'] }}"
+        sequence:
+          - choose:
+              - conditions: "{{ 'color_temp' in (state_attr(light, 'supported_color_modes') | default([], true)) }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light }}"
+                    data:
+                      color_temp: "{{ [ (state_attr(light,'color_temp') | int(state_attr(light,'min_mireds') | int(153)) ) + 50, state_attr(light,'max_mireds') | int(500) ] | min }}"
                       transition: "{{ light_transition / 1000 }}"
       # --- E2490: Pulsante/Rotella ---
       - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'button_single' }}"
@@ -337,7 +359,7 @@ action:
                     target:
                       entity_id: "{{ light }}"
                     data:
-                      brightness: "{{ [ [state_attr(light,'brightness')+step_short, min_brightness] | max, max_brightness ] | min }}"
+                      brightness: "{{ ([ (state_attr(light,'brightness')|int(0) + (step_short|int)), min_brightness|int ] | max, max_brightness|int ) | min }}"
                       transition: "{{ light_transition / 1000 }}"
       - conditions: "{{ controller_model == 'IKEA BILRESA E2490 Scroll Wheel' and action_type == 'rotate_down' and states(light) == 'on' }}"
         sequence:
