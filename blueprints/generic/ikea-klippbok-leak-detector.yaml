@@ -123,9 +123,11 @@ action:
 
   - variables:
       moisture_sensors: !input moisture_sensors
-      sensors: "{{ expand(moisture_sensors) }}"
       all_dry: >
-        {{ sensors | selectattr('state','eq','off') | list | count == (sensors | count) }}
+        {{ expand(moisture_sensors)
+          | rejectattr('state', 'eq', 'off')
+          | list
+          | count == 0 }}
       sensor_name: "{{ trigger.to_state.name }}"
       sensor_entity: "{{ trigger.entity_id }}"
       notify_mobile: !input notify_mobile
