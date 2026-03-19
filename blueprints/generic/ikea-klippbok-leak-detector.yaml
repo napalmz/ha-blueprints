@@ -37,7 +37,7 @@ blueprint:
 
     notify_mobile:
       name: 📱 Invia notifiche mobile
-      description: >
+      description: |
         Invia notifiche anche a notify.notify. Se l'app mobile non e configurata,
         l'automazione continua a funzionare senza errori.
       default: false
@@ -46,7 +46,8 @@ blueprint:
 
     dry_for_minutes:
       name: Minuti prima del rientro
-      description: Tempo di attesa (in minuti) con tutti i sensori asciutti prima di notificare il rientro.
+      description: |
+        Tempo di attesa (in minuti) con tutti i sensori asciutti prima di notificare il rientro.
       default: 15
       selector:
         number:
@@ -64,7 +65,7 @@ blueprint:
 
     wet_message:
       name: Messaggio notifica allarme
-      description: >
+      description: |
         Placeholder supportati: {sensor_name}, {sensor_entity}.
       default: "{sensor_name} è BAGNATO ({sensor_entity})."
       selector:
@@ -79,7 +80,7 @@ blueprint:
 
     dry_message:
       name: Messaggio notifica rientro
-      description: >
+      description: |
         Messaggio inviato quando tutti i sensori sono asciutti per il tempo configurato.
       default: "Tutti i sensori risultano asciutti."
       selector:
@@ -88,7 +89,7 @@ blueprint:
 
     wet_actions:
       name: Azioni aggiuntive su bagnato
-      description: >
+      description: |
         Azioni opzionali da eseguire quando un sensore rileva bagnato.
         Variabili utilizzabili nei template delle azioni:
         trigger.id, sensor_name, sensor_entity,
@@ -102,7 +103,7 @@ blueprint:
 
     dry_actions:
       name: Azioni aggiuntive su asciutto
-      description: >
+      description: |
         Azioni opzionali da eseguire quando tutti i sensori sono asciutti.
         Variabili utilizzabili nei template delle azioni:
         trigger.id, sensor_name, sensor_entity,
