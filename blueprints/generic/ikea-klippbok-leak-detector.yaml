@@ -4,7 +4,7 @@
 #
 # Monitora SOLO i sensori selezionati.
 # Avvisa quando uno qualsiasi diventa bagnato.
-# Invia il messaggio di rientro quando tutti sono asciutti da 15 minuti.
+# Invia il messaggio di rientro quando tutti sono asciutti da N minuti configurabili.
 # Le notifiche di sistema funzionano sempre.
 # Le notifiche mobile sono opzionali.
 #
@@ -17,8 +17,8 @@ blueprint:
   description: |
     Monitora i sensori di umidita/perdita selezionati e invia una notifica
     persistente quando ne rileva uno bagnato. Invia una notifica di rientro
-    quando tutti i sensori risultano asciutti da 15 minuti. Le notifiche mobile
-    sono opzionali.
+    quando tutti i sensori risultano asciutti per il tempo configurato.
+    Le notifiche mobile sono opzionali.
 
     ℹ️ Version 2026.03.19
   domain: automation
@@ -44,6 +44,18 @@ blueprint:
       selector:
         boolean: {}
 
+    dry_for_minutes:
+      name: Minuti prima del rientro
+      description: Tempo di attesa (in minuti) con tutti i sensori asciutti prima di notificare il rientro.
+      default: 15
+      selector:
+        number:
+          min: 1
+          max: 30
+          step: 1
+          unit_of_measurement: minutes
+          mode: slider
+
     wet_title:
       name: Titolo notifica allarme
       default: "💧 Perdita rilevata"
@@ -54,7 +66,7 @@ blueprint:
       name: Messaggio notifica allarme
       description: >
         Placeholder supportati: {sensor_name}, {sensor_entity}.
-      default: "{sensor_name} e BAGNATO ({sensor_entity})."
+      default: "{sensor_name} è BAGNATO ({sensor_entity})."
       selector:
         text:
           multiline: true
@@ -68,7 +80,7 @@ blueprint:
     dry_message:
       name: Messaggio notifica rientro
       description: >
-        Messaggio inviato quando tutti i sensori sono asciutti da 15 minuti.
+        Messaggio inviato quando tutti i sensori sono asciutti per il tempo configurato.
       default: "Tutti i sensori risultano asciutti."
       selector:
         text:
@@ -103,7 +115,7 @@ trigger:
     entity_id: !input moisture_sensors
     to: "off"
     for:
-      minutes: 15
+      minutes: !input dry_for_minutes
 
 condition: []
 
