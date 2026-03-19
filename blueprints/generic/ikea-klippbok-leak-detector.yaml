@@ -88,14 +88,28 @@ blueprint:
 
     wet_actions:
       name: Azioni aggiuntive su bagnato
-      description: Azioni opzionali da eseguire quando un sensore rileva bagnato.
+      description: >
+        Azioni opzionali da eseguire quando un sensore rileva bagnato.
+        Variabili utilizzabili nei template delle azioni:
+        trigger.id, sensor_name, sensor_entity,
+        wet_title, wet_message_template, wet_message_rendered,
+        dry_title, dry_message_template, dry_message_rendered,
+        notify_mobile, all_dry.
+        Esempio messaggio Telegram: {{ wet_message_rendered }}
       default: []
       selector:
         action: {}
 
     dry_actions:
       name: Azioni aggiuntive su asciutto
-      description: Azioni opzionali da eseguire quando tutti i sensori sono asciutti.
+      description: >
+        Azioni opzionali da eseguire quando tutti i sensori sono asciutti.
+        Variabili utilizzabili nei template delle azioni:
+        trigger.id, sensor_name, sensor_entity,
+        wet_title, wet_message_template, wet_message_rendered,
+        dry_title, dry_message_template, dry_message_rendered,
+        notify_mobile, all_dry.
+        Esempio messaggio Telegram: {{ dry_message_rendered }}
       default: []
       selector:
         action: {}
